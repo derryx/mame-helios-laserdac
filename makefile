@@ -18,7 +18,7 @@
 # IGNORE_GIT = 1
 
 # TARGET = mame
-# SUBTARGET = tiny
+SUBTARGET = arcade
 # TOOLS = 1
 # TESTS = 1
 # BENCHMARKS = 1
@@ -26,7 +26,7 @@
 
 # NO_OPENGL = 0
 # USE_DISPATCH_GL = 0
-# MODERN_WIN_API = 0
+# MODERN_WIN_API = 1
 # DIRECTINPUT = 7
 # USE_SDL = 1
 # SDL_INI_PATH = .;$HOME/.mame/;ini;
@@ -41,8 +41,8 @@
 # NO_USE_XINPUT_WII_LIGHTGUN_HACK = 1
 # FORCE_DRC_C_BACKEND = 1
 
-# DEBUG = 1
-# PROFILER = 1
+# DEBUG = 0
+# PROFILER = 0
 # SANITIZE =
 
 # PTR64 = 1
@@ -89,7 +89,7 @@
 # TOOLCHAIN =
 # OVERRIDE_CC = cc
 # OVERRIDE_CXX = c++
-# OVERRIDE_LD = ld
+# OVERRIDE_LD = lld-link
 # OVERRIDE_AR = ar
 
 # DEPRECATED = 0
@@ -105,13 +105,15 @@
 # QT_HOME = /usr/lib64/qt48/
 
 # SOURCES = src/mame/drivers/asteroid.cpp,src/mame/audio/llander.cpp
+# SOURCES = src/mame/drivers/asteroid.cpp,src/mame/audio/discrete.cpp
 
 # FORCE_VERSION_COMPILE = 1
 
 # MSBUILD = 1
 # IGNORE_BAD_LOCALISATION = 1
 # PRECOMPILE = 0
-
+MINGW32=/C/Tools/mamedev/msys64/mingw32
+MINGW64=/C/Tools/mamedev/msys64/mingw64
 # DEBUG_DIR=c:\test\location
 # DEBUG_ARGS= -window -video bgfx
 
@@ -226,7 +228,6 @@ $(error Unable to detect OS from uname -a: $(UNAME))
 endif
 endif
 
-MINGW:=
 ifdef MINGW64
 	MINGW := $(MINGW64)
 else
