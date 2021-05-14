@@ -59,8 +59,8 @@ SUBTARGET = arcade
 # ARCHOPTS_CXX =
 # ARCHOPTS_OBJC =
 # ARCHOPTS_OBJCXX =
-# OPT_FLAGS =
-# LDOPTS =
+OPT_FLAGS = -I../../../../../3rdparty/helios-dac -I/mingw32/include/libusb-1.0
+LDOPTS = -L/lib -lusb-1.0
 
 # USE_SYSTEM_LIB_ASIO = 1
 # USE_SYSTEM_LIB_EXPAT = 1
@@ -112,8 +112,6 @@ SUBTARGET = arcade
 # MSBUILD = 1
 # IGNORE_BAD_LOCALISATION = 1
 # PRECOMPILE = 0
-MINGW32=/C/Tools/mamedev/msys64/mingw32
-MINGW64=/C/Tools/mamedev/msys64/mingw64
 # DEBUG_DIR=c:\test\location
 # DEBUG_ARGS= -window -video bgfx
 

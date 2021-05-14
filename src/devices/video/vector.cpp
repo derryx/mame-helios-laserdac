@@ -46,6 +46,7 @@
 
 #include "emuopts.h"
 #include "render.h"
+#include "HeliosDac.h"
 
 
 #define VECTOR_WIDTH_DENOM 512
