@@ -60,6 +60,10 @@ float vector_options::s_beam_width_max = 0.0f;
 float vector_options::s_beam_dot_size = 0.0f;
 float vector_options::s_beam_intensity_weight = 0.0f;
 
+std::unique_ptr<HeliosPoint[]> heliosPoints;
+HeliosDac heliosDac;
+int numHeliosDevs;
+
 void vector_options::init(emu_options& options)
 {
 	s_beam_width_min = options.beam_width_min();
@@ -79,6 +83,11 @@ vector_device::vector_device(const machine_config &mconfig, const char *tag, dev
 		m_min_intensity(255),
 		m_max_intensity(0)
 {
+    numHeliosDevs = heliosDac.OpenDevices();
+}
+
+vector_device::~vector_device() {
+    heliosDac.CloseDevices();
 }
 
 void vector_device::device_start()
@@ -89,6 +98,7 @@ void vector_device::device_start()
 
 	/* allocate memory for tables */
 	m_vector_list = std::make_unique<point[]>(MAX_POINTS);
+	heliosPoints = std::make_unique<HeliosPoint[]>(MAX_POINTS);
 }
 
 /*
