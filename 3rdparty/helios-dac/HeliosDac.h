@@ -28,7 +28,7 @@ cannot receive a new frame until the currently playing frame finishes, freeing u
 
 #pragma once
 
-#include "libusb.h"
+#include "libusb/libusb.h"
 #include <cstring>
 #include <cstdint>
 #include <thread>

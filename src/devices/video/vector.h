@@ -5,7 +5,6 @@
 
 #pragma once
 
-
 class vector_device;
 
 class vector_options
@@ -54,6 +53,7 @@ private:
 	};
 
 	std::unique_ptr<point[]> m_vector_list;
+
 	int m_vector_index;
 	int m_min_intensity;
 	int m_max_intensity;

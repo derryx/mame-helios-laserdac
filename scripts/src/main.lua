@@ -300,6 +300,8 @@ end
 		"bimg",
 		"bx",
 		"ocore_" .. _OPTIONS["osd"],
+		"helios-dac",
+		ext_lib("usb-1.0"),
 	}
 
 	override_resources = false;

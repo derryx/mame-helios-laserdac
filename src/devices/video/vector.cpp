@@ -46,8 +46,7 @@
 
 #include "emuopts.h"
 #include "render.h"
-#include "HeliosDac.h"
-
+#include "helios-dac/HeliosDac.h"
 
 #define VECTOR_WIDTH_DENOM 512
 
@@ -83,7 +82,7 @@ vector_device::vector_device(const machine_config &mconfig, const char *tag, dev
 		m_min_intensity(255),
 		m_max_intensity(0)
 {
-    numHeliosDevs = heliosDac.OpenDevices();
+    numHeliosDevs =  heliosDac.OpenDevices();
 }
 
 vector_device::~vector_device() {
@@ -98,7 +97,7 @@ void vector_device::device_start()
 
 	/* allocate memory for tables */
 	m_vector_list = std::make_unique<point[]>(MAX_POINTS);
-	heliosPoints = std::make_unique<HeliosPoint[]>(MAX_POINTS);
+	heliosPoints = std::make_unique<HeliosPoint[]>(HELIOS_MAX_POINTS);
 }
 
 /*
@@ -170,6 +169,7 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 	point *curpoint;
 	int lastx = 0;
 	int lasty = 0;
+	int helios_dac_index = 0;
 
 	curpoint = m_vector_list.get();
 
@@ -207,7 +207,22 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 				beam_width,
 				(curpoint->intensity << 24) | (curpoint->col & 0xffffff),
 				flags);
-		}
+
+            HeliosPoint *dacpoint;
+            dacpoint = &heliosPoints[helios_dac_index];
+            dacpoint->x = curpoint->x;
+            dacpoint->y = curpoint->y;
+            dacpoint->r = curpoint->col.r();
+            dacpoint->g = curpoint->col.g();
+            dacpoint->b = curpoint->col.b();
+            dacpoint->i = curpoint->intensity;
+            helios_dac_index++;
+            if (helios_dac_index >= HELIOS_MAX_POINTS)
+            {
+                helios_dac_index--;
+                logerror("*** Warning! DAC Point list overflow!\n");
+            }
+        }
 
 		lastx = curpoint->x;
 		lasty = curpoint->y;

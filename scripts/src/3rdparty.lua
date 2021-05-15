@@ -2390,31 +2390,23 @@ project "asmjit"
 	}
 end
 
+
+--project "usb"
+--	uuid "82be8f4a-aebe-4142-a975-e5b755282908"
+--	kind "StaticLib"
+
+--	links {
+--    	ext_lib("usb"),
+--    }
+
 project "helios-dac"
 	uuid "82be8f4a-eebe-4142-a975-e5b755282907"
 	kind "StaticLib"
 
-	options {
-		"ForceCPP",
-	}
+    includedirs {
+        MAME_DIR .. "3rdparty",
+    }
 
-	includedirs {
-		MAME_DIR .. "src/helios-dac",
-	}
-
-	configuration { "gmake or ninja" }
-		buildoptions_cpp {
-			"-x c++",
-		}
-
-	configuration { "vs*" }
-		buildoptions {
-		}
-if _OPTIONS["vs"]=="intel-15" then
-		buildoptions {
-			"/Qwd2557",             -- remark #2557: comparison between signed and unsigned operands
-		}
-end
 	configuration { }
 
 	files {

@@ -14,6 +14,7 @@ See header HeliosDac.h for function and usage documentation
 
 
 #include "HeliosDac.h"
+#include "libusb/libusb.h"
 
 HeliosDac::HeliosDac()
 {

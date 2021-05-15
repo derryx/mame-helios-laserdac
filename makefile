@@ -13,7 +13,7 @@
 ###########################################################################
 
 # REGENIE = 1
-# VERBOSE = 1
+VERBOSE = 1
 # NOWERROR = 1
 # IGNORE_GIT = 1
 
@@ -59,8 +59,8 @@ SUBTARGET = arcade
 # ARCHOPTS_CXX =
 # ARCHOPTS_OBJC =
 # ARCHOPTS_OBJCXX =
-OPT_FLAGS = -I../../../../../3rdparty/helios-dac -I/mingw32/include/libusb-1.0
-LDOPTS = -L/lib -lusb-1.0
+# OPT_FLAGS = -I/mingw32/include/libusb-1.0
+# LDOPTS = ../../../../../3rdparty/libusb/libusb-1.0.a
 
 # USE_SYSTEM_LIB_ASIO = 1
 # USE_SYSTEM_LIB_EXPAT = 1
