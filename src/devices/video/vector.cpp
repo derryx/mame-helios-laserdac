@@ -53,6 +53,10 @@
 // 20000 is needed for mhavoc (see MT 06668) 10000 is enough for other games
 #define MAX_POINTS 20000
 
+//#define HELIOS_FLAGS (HELIOS_FLAGS_DONT_BLOCK | HELIOS_FLAGS_SINGLE_MODE | HELIOS_FLAGS_START_IMMEDIATELY)
+#define HELIOS_FLAGS (HELIOS_FLAGS_SINGLE_MODE | HELIOS_FLAGS_DONT_BLOCK)
+#define HELIOS_DEVICE 0
+
 float vector_options::s_flicker = 0.0f;
 float vector_options::s_beam_width_min = 0.0f;
 float vector_options::s_beam_width_max = 0.0f;
@@ -207,21 +211,21 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 				beam_width,
 				(curpoint->intensity << 24) | (curpoint->col & 0xffffff),
 				flags);
+        }
 
-            HeliosPoint *dacpoint;
-            dacpoint = &heliosPoints[helios_dac_index];
-            dacpoint->x = curpoint->x;
-            dacpoint->y = curpoint->y;
-            dacpoint->r = curpoint->col.r();
-            dacpoint->g = curpoint->col.g();
-            dacpoint->b = curpoint->col.b();
-            dacpoint->i = curpoint->intensity;
-            helios_dac_index++;
-            if (helios_dac_index >= HELIOS_MAX_POINTS)
-            {
-                helios_dac_index--;
-                logerror("*** Warning! DAC Point list overflow!\n");
-            }
+        HeliosPoint *dacpoint;
+        dacpoint = &heliosPoints[helios_dac_index];
+        dacpoint->x = curpoint->x;
+        dacpoint->y = curpoint->y;
+        dacpoint->r = curpoint->col.r();
+        dacpoint->g = curpoint->col.g();
+        dacpoint->b = curpoint->col.b();
+        dacpoint->i = curpoint->intensity;
+        helios_dac_index++;
+        if (helios_dac_index >= HELIOS_MAX_POINTS)
+        {
+            helios_dac_index--;
+            logerror("*** Warning! DAC Point list overflow!\n");
         }
 
 		lastx = curpoint->x;
@@ -229,6 +233,10 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 
 		curpoint++;
 	}
+
+	if (numHeliosDevs && heliosDac.GetStatus(HELIOS_DEVICE)) {
+        heliosDac.WriteFrame(HELIOS_DEVICE, HELIOS_MAX_RATE, HELIOS_FLAGS, heliosPoints.get(), helios_dac_index);
+    }
 
 	return 0;
 }
