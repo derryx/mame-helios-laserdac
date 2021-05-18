@@ -47,6 +47,7 @@
 #include "emuopts.h"
 #include "render.h"
 #include "helios-dac/HeliosDac.h"
+#include <iostream>
 
 #define VECTOR_WIDTH_DENOM 512
 
@@ -56,12 +57,17 @@
 //#define HELIOS_FLAGS (HELIOS_FLAGS_DONT_BLOCK | HELIOS_FLAGS_SINGLE_MODE | HELIOS_FLAGS_START_IMMEDIATELY)
 #define HELIOS_FLAGS (HELIOS_FLAGS_SINGLE_MODE | HELIOS_FLAGS_DONT_BLOCK)
 #define HELIOS_DEVICE 0
+#define HELIOS_PPS 5000
+// #define DEBUG_MAXXY
 
 float vector_options::s_flicker = 0.0f;
 float vector_options::s_beam_width_min = 0.0f;
 float vector_options::s_beam_width_max = 0.0f;
 float vector_options::s_beam_dot_size = 0.0f;
 float vector_options::s_beam_intensity_weight = 0.0f;
+
+// helios dac supports 12bit = 4095 as maximum value -> so scale to this
+constexpr float helios_scale = 1.8f/32768.0f;
 
 std::unique_ptr<HeliosPoint[]> heliosPoints;
 HeliosDac heliosDac;
@@ -170,9 +176,18 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 	float xoffs = (float)visarea.min_x;
 	float yoffs = (float)visarea.min_y;
 
+#ifdef DEBUG_MAXXY
+    uint16_t minx=std::numeric_limits<uint16_t>::max();
+    uint16_t maxx=std::numeric_limits<uint16_t>::min();
+    uint16_t miny=std::numeric_limits<uint16_t>::max();
+    uint16_t maxy=std::numeric_limits<uint16_t>::min();
+    uint8_t maxi=std::numeric_limits<uint8_t>::min();
+#endif
+
 	point *curpoint;
 	int lastx = 0;
 	int lasty = 0;
+	int lasti = 0;
 	int helios_dac_index = 0;
 
 	curpoint = m_vector_list.get();
@@ -213,14 +228,23 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 				flags);
         }
 
-        HeliosPoint *dacpoint;
-        dacpoint = &heliosPoints[helios_dac_index];
-        dacpoint->x = curpoint->x;
-        dacpoint->y = curpoint->y;
-        dacpoint->r = curpoint->col.r();
-        dacpoint->g = curpoint->col.g();
-        dacpoint->b = curpoint->col.b();
+        auto dacpoint = &heliosPoints[helios_dac_index];
+        dacpoint->x = (std::uint16_t)((float)curpoint->x * helios_scale);
+        dacpoint->y = (std::uint16_t)((float)curpoint->y * helios_scale);
+
+        dacpoint->r = curpoint->intensity!=0?curpoint->col.r():0;
+        dacpoint->g = curpoint->intensity!=0?curpoint->col.g():0;
+        dacpoint->b = curpoint->intensity!=0?curpoint->col.b():0;
         dacpoint->i = curpoint->intensity;
+
+#ifdef DEBUG_MAXXY
+        minx = std::min(minx, dacpoint -> x);
+        maxx = std::max(maxx, dacpoint -> x);
+        miny = std::min(miny, dacpoint -> y);
+        maxy = std::max(maxy, dacpoint -> y);
+        maxi = std::max(maxi, dacpoint -> i);
+#endif
+
         helios_dac_index++;
         if (helios_dac_index >= HELIOS_MAX_POINTS)
         {
@@ -230,12 +254,18 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 
 		lastx = curpoint->x;
 		lasty = curpoint->y;
+		lasti = curpoint->intensity;
 
 		curpoint++;
 	}
 
 	if (numHeliosDevs && heliosDac.GetStatus(HELIOS_DEVICE)) {
-        heliosDac.WriteFrame(HELIOS_DEVICE, HELIOS_MAX_RATE, HELIOS_FLAGS, heliosPoints.get(), helios_dac_index);
+        heliosDac.WriteFrame(HELIOS_DEVICE, HELIOS_PPS, HELIOS_FLAGS, heliosPoints.get(), helios_dac_index);
+#ifdef DEBUG_MAXXY
+        std::cout << "X-values: " << minx << "-" << maxx << " ";
+        std::cout << "Y-values: " << miny << "-" << maxy << " ";
+        std::cout << "I: " << (char)maxi << std::endl;
+#endif
     }
 
 	return 0;
