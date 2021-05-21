@@ -15,6 +15,7 @@ See header HeliosDac.h for function and usage documentation
 
 #include "HeliosDac.h"
 #include "libusb/libusb.h"
+#include <cmath>
 
 HeliosDac::HeliosDac()
 {
@@ -133,6 +134,50 @@ int HeliosDac::WriteFrame(unsigned int devNum, unsigned int pps, std::uint8_t fl
 		return HELIOS_ERROR_INVALID_DEVNUM;
 
 	return dev->SendFrame(pps, flags, points, std::min<int>(numOfPoints, HELIOS_MAX_POINTS));
+}
+
+int HeliosDac::WriteFrame(unsigned int devNum, unsigned int pps, std::uint8_t flags, HeliosLine* lines, unsigned int numLines)
+{
+    HeliosPoint points[numLines*2];
+    unsigned int currentLine;
+
+    OptimizeLineSchedule(lines, numLines);
+
+    for (currentLine=0;currentLine<numLines;++currentLine) {
+        points[currentLine*2]=lines[currentLine].p1;
+        points[currentLine*2+1]=lines[currentLine].p2;
+    }
+
+    return WriteFrame(devNum, pps, flags, points, numLines*2);
+}
+
+int HeliosDac::CalcDistance(HeliosLine* line1, HeliosLine* line2) {
+    int dx=line1->p1.x-line2->p1.x;
+    int dy=line1->p2.y-line2->p2.y;
+
+    return std::sqrt(dx*dx+dy*dy);
+}
+
+void HeliosDac::OptimizeLineSchedule(HeliosLine *lines, unsigned int numLines) {
+    std::vector<HeliosLine> optimizedLines {lines[0]};
+
+    for (int currentLine=1;currentLine<numLines;++currentLine) {
+        int minDistance=CalcDistance(&lines[currentLine], &optimizedLines[0]);
+        int minDistanceIndex=0;
+
+        for(int checkLine=0;checkLine<optimizedLines.size();++checkLine) {
+            int currentDistance= CalcDistance(&lines[currentLine], &optimizedLines[checkLine]);
+            if (currentDistance<minDistance) {
+                minDistance=currentDistance;
+                minDistanceIndex=checkLine;
+            }
+        }
+        optimizedLines.insert(optimizedLines.begin()+minDistanceIndex, lines[currentLine]);
+    }
+
+    for (int i=0;i<numLines;++i) {
+        lines[i]=optimizedLines[i];
+    }
 }
 
 int HeliosDac::GetStatus(unsigned int devNum)

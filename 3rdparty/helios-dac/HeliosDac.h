@@ -107,6 +107,11 @@ typedef struct
 	std::uint8_t i;	//8 bit (from 0 to 0xFF)
 } HeliosPoint;
 
+typedef struct
+{
+    HeliosPoint p1,p2;
+} HeliosLine;
+
 class HeliosDac
 {
 public:
@@ -140,6 +145,8 @@ public:
 	//numOfPoints: number of points in the frame
 	int WriteFrame(unsigned int devNum, unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints);
 
+    int WriteFrame(unsigned int devNum, unsigned int pps, std::uint8_t flags, HeliosLine* lines, unsigned int numLines);
+
 	//Gets status of DAC, 1 means DAC is ready to receive frame, 0 means it is not
 	int GetStatus(unsigned int devNum);
 
@@ -161,6 +168,8 @@ public:
 	//Erase the firmware of the DAC, allowing it to be updated by accessing the SAM-BA bootloader
 	int EraseFirmware(unsigned int devNum);
 
+    void OptimizeLineSchedule(HeliosLine* lines, unsigned int numLines);
+    int CalcDistance(HeliosLine* line1, HeliosLine* line2);
 private:
 
 	class HeliosDacDevice //individual dac, interal use

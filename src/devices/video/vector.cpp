@@ -57,7 +57,7 @@
 //#define HELIOS_FLAGS (HELIOS_FLAGS_DONT_BLOCK | HELIOS_FLAGS_SINGLE_MODE | HELIOS_FLAGS_START_IMMEDIATELY)
 #define HELIOS_FLAGS (HELIOS_FLAGS_SINGLE_MODE | HELIOS_FLAGS_DONT_BLOCK)
 #define HELIOS_DEVICE 0
-#define HELIOS_PPS 5000
+#define HELIOS_PPS 2500
 // #define DEBUG_MAXXY
 
 float vector_options::s_flicker = 0.0f;
@@ -67,9 +67,10 @@ float vector_options::s_beam_dot_size = 0.0f;
 float vector_options::s_beam_intensity_weight = 0.0f;
 
 // helios dac supports 12bit = 4095 as maximum value -> so scale to this
-constexpr float helios_scale = 1.8f/32768.0f;
+//constexpr float helios_scale = 1.8f/32768.0f;
+constexpr float helios_scale = 1.0f/32768.0f;
 
-std::unique_ptr<HeliosPoint[]> heliosPoints;
+std::unique_ptr<HeliosLine[]> heliosLines;
 HeliosDac heliosDac;
 int numHeliosDevs;
 
@@ -107,7 +108,7 @@ void vector_device::device_start()
 
 	/* allocate memory for tables */
 	m_vector_list = std::make_unique<point[]>(MAX_POINTS);
-	heliosPoints = std::make_unique<HeliosPoint[]>(HELIOS_MAX_POINTS);
+	heliosLines = std::make_unique<HeliosLine[]>(HELIOS_MAX_POINTS/2+1);
 }
 
 /*
@@ -187,7 +188,6 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 	point *curpoint;
 	int lastx = 0;
 	int lasty = 0;
-	int lasti = 0;
 	int helios_dac_index = 0;
 
 	curpoint = m_vector_list.get();
@@ -226,41 +226,37 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
 				beam_width,
 				(curpoint->intensity << 24) | (curpoint->col & 0xffffff),
 				flags);
-        }
 
-        auto dacpoint = &heliosPoints[helios_dac_index];
-        dacpoint->x = (std::uint16_t)((float)curpoint->x * helios_scale);
-        dacpoint->y = (std::uint16_t)((float)curpoint->y * helios_scale);
+            auto dacLine = &heliosLines[helios_dac_index];
+            dacLine->p1.x = (std::uint16_t)((float) lastx * helios_scale);
+            dacLine->p1.y = (std::uint16_t)((float) lasty * helios_scale);
+            dacLine->p1.r = 0;
+            dacLine->p1.g = 0;
+            dacLine->p1.b = 0;
+            dacLine->p1.i = 0;
+            dacLine->p2.x = (std::uint16_t)((float) curpoint->x * helios_scale);
+            dacLine->p2.y = (std::uint16_t)((float) curpoint->y * helios_scale);
+            dacLine->p2.r = curpoint->col.r();
+            dacLine->p2.g = curpoint->col.g();
+            dacLine->p2.b = curpoint->col.b();
+            dacLine->p2.i = curpoint->intensity;
 
-        dacpoint->r = curpoint->intensity!=0?curpoint->col.r():0;
-        dacpoint->g = curpoint->intensity!=0?curpoint->col.g():0;
-        dacpoint->b = curpoint->intensity!=0?curpoint->col.b():0;
-        dacpoint->i = curpoint->intensity;
-
-#ifdef DEBUG_MAXXY
-        minx = std::min(minx, dacpoint -> x);
-        maxx = std::max(maxx, dacpoint -> x);
-        miny = std::min(miny, dacpoint -> y);
-        maxy = std::max(maxy, dacpoint -> y);
-        maxi = std::max(maxi, dacpoint -> i);
-#endif
-
-        helios_dac_index++;
-        if (helios_dac_index >= HELIOS_MAX_POINTS)
-        {
-            helios_dac_index--;
-            logerror("*** Warning! DAC Point list overflow!\n");
+            helios_dac_index++;
+            if (helios_dac_index >= HELIOS_MAX_POINTS/2+1)
+            {
+                helios_dac_index--;
+                logerror("*** Warning! DAC Point list overflow!\n");
+            }
         }
 
 		lastx = curpoint->x;
 		lasty = curpoint->y;
-		lasti = curpoint->intensity;
 
 		curpoint++;
 	}
 
 	if (numHeliosDevs && heliosDac.GetStatus(HELIOS_DEVICE)) {
-        heliosDac.WriteFrame(HELIOS_DEVICE, HELIOS_PPS, HELIOS_FLAGS, heliosPoints.get(), helios_dac_index);
+        heliosDac.WriteFrame(HELIOS_DEVICE, HELIOS_PPS, HELIOS_FLAGS, heliosLines.get(), helios_dac_index);
 #ifdef DEBUG_MAXXY
         std::cout << "X-values: " << minx << "-" << maxx << " ";
         std::cout << "Y-values: " << miny << "-" << maxy << " ";
