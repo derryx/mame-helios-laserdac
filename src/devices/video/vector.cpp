@@ -57,7 +57,8 @@
 //#define HELIOS_FLAGS (HELIOS_FLAGS_DONT_BLOCK | HELIOS_FLAGS_SINGLE_MODE | HELIOS_FLAGS_START_IMMEDIATELY)
 #define HELIOS_FLAGS (HELIOS_FLAGS_SINGLE_MODE | HELIOS_FLAGS_DONT_BLOCK)
 #define HELIOS_DEVICE 0
-#define HELIOS_PPS 2500
+#define HELIOS_PPS 2000
+#define SHOW_CONNECTION_LINES false
 // #define DEBUG_MAXXY
 
 float vector_options::s_flicker = 0.0f;
@@ -230,10 +231,11 @@ uint32_t vector_device::screen_update(screen_device &screen, bitmap_rgb32 &bitma
             auto dacLine = &heliosLines[helios_dac_index];
             dacLine->p1.x = (std::uint16_t)((float) lastx * helios_scale);
             dacLine->p1.y = (std::uint16_t)((float) lasty * helios_scale);
-            dacLine->p1.r = 0;
+            dacLine->p1.r = SHOW_CONNECTION_LINES?255:0;
             dacLine->p1.g = 0;
             dacLine->p1.b = 0;
             dacLine->p1.i = 0;
+
             dacLine->p2.x = (std::uint16_t)((float) curpoint->x * helios_scale);
             dacLine->p2.y = (std::uint16_t)((float) curpoint->y * helios_scale);
             dacLine->p2.r = curpoint->col.r();
